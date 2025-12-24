@@ -1,4 +1,6 @@
 # Global-Superstore-Sales-Insights-BI-Dashboard
+<img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/f1727229-1e32-4e92-81f6-6b60fe21ff4b" />
+
 
 ## 📊 Project Overview
 This project presents an end-to-end sales analytics solution using the Global Superstore dataset. 
