@@ -1,0 +1,108 @@
+# ================================
+# 1. Imports
+# ================================
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+# ================================
+# 2. Load Data
+# ================================
+df = pd.read_csv(r"C:\Users\DELL\Desktop\Sales_Analytics_Project\data\sales.csv")
+
+df.head()
+df.shape
+df.info()
+df.isnull().sum()
+
+
+# ================================
+# 3. Date Cleaning (order_date & ship_date)
+# ================================
+df['order_date'] = pd.to_datetime(df['order_date'], format='mixed', errors='coerce')
+df['ship_date']  = pd.to_datetime(df['ship_date'],  format='mixed', errors='coerce')
+
+# second pass for day-first dates
+df['order_date'] = df['order_date'].fillna(
+    pd.to_datetime(df['order_date'], dayfirst=True, errors='coerce')
+)
+df['ship_date'] = df['ship_date'].fillna(
+    pd.to_datetime(df['ship_date'], dayfirst=True, errors='coerce')
+)
+
+df[['order_date','ship_date']].isnull().sum()
+df[['order_date','ship_date']].dtypes
+
+
+# ================================
+# 4. Keep only valid date rows
+# ================================
+df_dates = df.dropna(subset=['order_date', 'ship_date'])
+df_dates.shape
+
+
+# ================================
+# 5. Feature Engineering
+# ================================
+df_dates['delivery_days'] = (df_dates['ship_date'] - df_dates['order_date']).dt.days
+df_dates['order_month'] = df_dates['order_date'].dt.month
+df_dates['order_year'] = df_dates['order_date'].dt.year
+
+df_dates['delivery_days'].describe()
+df_dates[['order_month','order_year']].head()
+
+
+# ================================
+# 6. Fix Sales Datatype
+# ================================
+df_dates['sales'] = pd.to_numeric(df_dates['sales'], errors='coerce')
+df_dates['sales'].dtype
+
+
+# ================================
+# 7. Business Analysis
+# ================================
+# Sales by category
+df_dates.groupby('category')['sales'].sum().sort_values(ascending=False)
+
+# Profit analysis
+df_dates.groupby('region')['profit'].sum().sort_values(ascending=False)
+df_dates.groupby('category')['profit'].sum().sort_values(ascending=False).head()
+df_dates.groupby('product_name')['profit'].sum().sort_values(ascending=False).head(10)
+df_dates.groupby('region')['profit'].sum().sort_values().head()
+
+
+# ================================
+# 8. Visualizations
+# ================================
+# Profit by Category
+profit_category = df_dates.groupby('category')['profit'].sum().sort_values()
+profit_category.plot(kind='barh', figsize=(8,4))
+plt.title('Total Profit by Category')
+plt.xlabel('Profit')
+plt.ylabel('Category')
+plt.show()
+
+# Delivery Days Distribution
+df_dates['delivery_days'].plot(kind='hist', bins=20, figsize=(8,4))
+plt.title('Distribution of Delivery Days')
+plt.xlabel('Delivery Days')
+plt.show()
+
+# Monthly Sales Trend
+monthly_sales = df_dates.groupby('order_month')['sales'].sum()
+
+monthly_sales.plot(kind='line', marker='o', figsize=(8,4))
+plt.title('Monthly Sales Trend')
+plt.xlabel('Month')
+plt.ylabel('Sales')
+plt.xticks(range(1,13))
+plt.grid(True)
+plt.show()
+
+
+# ================================
+# 9. Export for Power BI
+# ================================
+df_dates.to_csv("final_superstore_cleaned.csv", index=False)
